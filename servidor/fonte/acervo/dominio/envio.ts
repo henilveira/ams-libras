@@ -21,26 +21,26 @@ export class Envio {
     this.registro.atualizadoEm = data;
   }
 
-  solicitarRevisao(autorId: string, data: string) {
+  solicitarRevisao(autorId: string, data: string, fonteAberta = false) {
     if (!this.podeEditar(autorId)) throw new ErroDeDominio('Este envio não pode ser encaminhado.');
-    this.validarConteudo();
+    this.validarConteudo(fonteAberta);
     this.registro.estado = 'em-revisao';
     this.registro.atualizadoEm = data;
   }
 
-  revisar(decisao: Decisao, justificativa: string, moderadorId: string, data: string) {
+  revisar(decisao: Decisao, justificativa: string, moderadorId: string, data: string, fonteAberta = false) {
     if (this.registro.estado !== 'em-revisao') throw new ErroDeDominio('O envio já saiu da fila de revisão.');
     if (this.registro.autorId === moderadorId) throw new ErroDeDominio('O autor não pode revisar o próprio envio.');
     if (decisao !== 'aprovado' && !justificativa) {
       throw new ErroDeDominio('Informe uma justificativa para devolver ou rejeitar.');
     }
-    if (decisao === 'aprovado') this.validarConteudo();
+    if (decisao === 'aprovado') this.validarConteudo(fonteAberta);
     this.registro.revisoes.push({ decisao, justificativa, moderadorId, data });
     this.registro.estado = decisao;
     this.registro.atualizadoEm = data;
   }
 
-  private validarConteudo() {
+  private validarConteudo(fonteAberta: boolean) {
     const { verbete, sinal, autorizacao, operacao } = this.registro;
     if (operacao === 'remocao') return;
     if (!verbete.palavra || !verbete.assunto || !verbete.acepcao) {
@@ -62,7 +62,7 @@ export class Envio {
     if (autorizacao.menores && !autorizacao.identificaveis) {
       throw new ErroDeDominio('Declare a presença de pessoas identificáveis ao indicar menores no vídeo.');
     }
-    if ((autorizacao.identificaveis || autorizacao.menores) && !autorizacao.comprovanteId) {
+    if (!autorizacao.comprovanteId && (autorizacao.menores || (autorizacao.identificaveis && !fonteAberta))) {
       throw new ErroDeDominio('Anexe a documentação exigida, inclusive a do responsável em caso de menores.');
     }
   }

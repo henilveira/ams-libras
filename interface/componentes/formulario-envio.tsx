@@ -49,7 +49,7 @@ export function FormularioEnvio({ inicial, alvo, assuntos, voltar, concluir }: {
     if (tipo === 'video') {
       mudarConteudo((atual) => ({
         ...atual,
-        sinal: { ...atual.sinal, videoId: id, legendaId: atual.sinal.videoId ? undefined : atual.sinal.legendaId },
+        sinal: { ...atual.sinal, videoId: id, amostra: undefined, legendaId: atual.sinal.videoId ? undefined : atual.sinal.legendaId },
         autorizacao: atual.sinal.videoId ? { ...conteudoVazio.autorizacao } : atual.autorizacao,
       }));
     }
@@ -166,6 +166,9 @@ export function FormularioEnvio({ inicial, alvo, assuntos, voltar, concluir }: {
         </fieldset>
         <fieldset disabled={ocupado || Boolean(upload)}>
           <legend>Autorização de uso do vídeo</legend>
+          {sinal.amostra?.tipo === 'referencia' && <p className="credito-midia">
+            A licença do vídeo de referência já está registrada no acervo.
+          </p>}
           <div className="grade-formulario">
             <label>Há pessoas identificáveis?
               <select value={autorizacao.identificaveis?.toString() ?? ''} onChange={(evento) =>
@@ -184,7 +187,8 @@ export function FormularioEnvio({ inicial, alvo, assuntos, voltar, concluir }: {
             <label>Finalidade<textarea maxLength={2000} value={autorizacao.finalidade} placeholder="Ex.: consulta educativa no dicionário"
               onChange={(evento) => alterarAutorizacao({ finalidade: evento.target.value })} /></label>
           </div>
-          {campoArquivo('autorizacao', 'Comprovante em PDF (obrigatório se houver pessoas identificáveis)', 'application/pdf,.pdf', autorizacao.comprovanteId)}
+          {campoArquivo('autorizacao', sinal.amostra?.tipo === 'referencia'
+            ? 'Comprovante complementar em PDF' : 'Comprovante em PDF (obrigatório se houver pessoas identificáveis)', 'application/pdf,.pdf', autorizacao.comprovanteId)}
         </fieldset>
       </>}
       {upload && <p className="aviso" role="status">Enviando e validando o arquivo…</p>}

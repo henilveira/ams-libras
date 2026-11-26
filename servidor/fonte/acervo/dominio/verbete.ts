@@ -16,6 +16,12 @@ export interface DadosVerbete {
   textoAlternativo: string;
 }
 
+export type AmostraMidia =
+  | { tipo: 'simulada'; cartaz: string }
+  | { tipo: 'referencia'; cartaz: string; credito: {
+    autor: string; titulo: string; url: string; licenca: string; urlLicenca: string;
+  } };
+
 export interface DadosSinal {
   tipo: TipoSinal;
   regiao: string;
@@ -24,6 +30,7 @@ export interface DadosSinal {
   movimento: string;
   videoId?: string;
   legendaId?: string;
+  amostra?: AmostraMidia;
 }
 
 export interface Autorizacao {
@@ -57,6 +64,7 @@ export interface RegistroEnvio extends ConteudoEnvio {
   criadoEm: string;
   atualizadoEm: string;
   revisoes: Revisao[];
+  demonstracao?: boolean;
 }
 
 export interface SinalPublicado extends DadosSinal {

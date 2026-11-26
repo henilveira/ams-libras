@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState, type FormEvent } from 'react';
-import { ArrowLeft, ArrowRight, Hand, LogIn, LogOut } from 'lucide-react';
+import { ArrowLeft, ArrowRight, ArrowUpRight, LogOut } from 'lucide-react';
 import { Administracao } from './administracao';
 import { AreaEnvios } from './area-envios';
 import { Consulta, DetalheVerbete } from './consulta';
@@ -99,8 +99,8 @@ export function Dicionario() {
     <header className="topo">
       <div className="topo-interno">
         <button type="button" className="marca" onClick={() => abrirTela('consulta')}>
-          <span className="marca-icone"><Hand size={21} strokeWidth={1.8} aria-hidden="true" /></span>
-          <span>Dicionário<span className="marca-verde"> de Libras</span></span>
+          <span className="marca-icone" aria-hidden="true">L<span>.</span></span>
+          <span>Dicionário de Libras</span>
         </button>
         <nav aria-label="Navegação principal">
           <button className="botao texto nave-acervo" aria-current={tela === 'consulta' || tela === 'verbete' ? 'page' : undefined}
@@ -112,7 +112,7 @@ export function Dicionario() {
               <LogOut size={19} aria-hidden="true" />
             </button>
           </> : <button className="botao secundario" onClick={() => { mudarContribuicaoPendente(false); mudarVariacao(undefined); abrirTela('entrar'); }}>
-            <LogIn size={17} aria-hidden="true" /> Entrar
+            Entrar <ArrowUpRight size={16} aria-hidden="true" />
           </button>}
         </nav>
       </div>
@@ -140,8 +140,12 @@ export function Dicionario() {
       {tela === 'solicitacao' && <PedidoTitular sinal={sinal} voltar={() => abrirTela(sinal && verbete ? 'verbete' : 'consulta')} />}
     </main>
     <footer className="rodape">
-      <div><span>Dicionário de Libras · AMS0002</span>
-        <button className="botao texto" onClick={() => solicitar()}>Solicitação de titular</button></div>
+      <div><span>Dicionário de Libras <small>Projeto acadêmico · AMS0002</small></span>
+        <div className="acoes">
+          <button className="botao texto" onClick={() => contribuir()}>Contribuir <ArrowUpRight size={16} aria-hidden="true" /></button>
+          <button className="botao texto" onClick={() => solicitar()}>Solicitação de titular</button>
+        </div>
+      </div>
     </footer>
   </>;
 }
@@ -160,8 +164,8 @@ function Entrada({ entrar, ocupado, erro, voltar }: {
     void entrar(email, senha);
   }
 
-  return <section className="pagina-interna pagina-estreita">
-    <button className="botao texto" onClick={voltar}><ArrowLeft size={18} aria-hidden="true" /> Voltar ao acervo</button>
+  return <section className="pagina-interna pagina-entrada">
+    <button className="botao texto voltar" onClick={voltar}><ArrowLeft size={18} aria-hidden="true" /> Voltar ao acervo</button>
     <div className="titulo-pagina">
       <h1 id="titulo-principal" tabIndex={-1}>Entrar</h1>
       <p>Acesse a área de colaboração, moderação ou administração.</p>
@@ -174,7 +178,7 @@ function Entrada({ entrar, ocupado, erro, voltar }: {
       {erro && <p className="aviso erro" role="alert">{erro}</p>}
       <button type="submit" className="botao principal" disabled={ocupado}>Entrar <ArrowRight size={17} aria-hidden="true" /></button>
     </form>
-    <div className="secao">
+    <div className="secao atalhos-demonstracao">
       <h2>Contas de demonstração</h2>
       <div className="acoes">
         {Object.entries(perfis).map(([perfil, rotulo]) => <button className="botao secundario" key={perfil}

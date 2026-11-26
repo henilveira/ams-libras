@@ -1,6 +1,6 @@
 'use client';
 
-import { ArrowLeft, ArrowUpRight, BookOpen, Hand, Search } from 'lucide-react';
+import { ArrowDownRight, ArrowLeft, ArrowRight, ArrowUpRight, Play, Search } from 'lucide-react';
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import { api, mensagemDe, tiposSinal, urlMidia, type DadosSinal, type VerbetePublicado } from './dados';
@@ -17,6 +17,7 @@ export function Consulta({ assuntos, abrir, contribuir }: {
   const [assunto, mudarAssunto] = useState('');
   const [ordem, mudarOrdem] = useState('az');
   const [verbetes, mudarVerbetes] = useState<VerbetePublicado[]>([]);
+  const [destaque, mudarDestaque] = useState<VerbetePublicado>();
   const [situacao, mudarSituacao] = useState('carregando');
   const [erro, mudarErro] = useState('');
   const [tentativa, tentar] = useState(0);
@@ -31,6 +32,8 @@ export function Consulta({ assuntos, abrir, contribuir }: {
       api<VerbetePublicado[]>(`verbetes?${consulta}`).then((lista) => {
         if (!vigente) return;
         mudarVerbetes(lista);
+        const referencia = lista.find((verbete) => verbete.sinais.some((sinal) => sinal.amostra?.tipo === 'referencia'));
+        if (referencia || (!busca && !letra && !assunto)) mudarDestaque(referencia);
         mudarSituacao('pronto');
       }).catch((falha) => {
         if (!vigente) return;
@@ -44,60 +47,91 @@ export function Consulta({ assuntos, abrir, contribuir }: {
   return <>
     <section className="abertura" aria-labelledby="titulo-principal">
       <div className="abertura-texto">
-        <p className="sobretitulo">Língua Brasileira de Sinais</p>
-        <h1 id="titulo-principal" tabIndex={-1}>Dicionário <em>de Libras</em></h1>
-        <p>Busque por palavra, acepção, assunto ou exemplo e veja os sinais em vídeo.</p>
-        <div className="caixa-busca" role="search">
+        <p className="sobretitulo"><span aria-hidden="true" /> Língua Brasileira de Sinais</p>
+        <h1 id="titulo-principal" tabIndex={-1}>Dicionário<br />de Libras<span>.</span></h1>
+        <p className="introducao">Encontre palavras, veja os sinais em vídeo e explore suas variações.</p>
+        <form className="caixa-busca" role="search" onSubmit={(evento) => {
+          evento.preventDefault();
+          document.getElementById('titulo-acervo')?.focus();
+        }}>
           <Search size={21} aria-hidden="true" />
           <label className="somente-leitor" htmlFor="busca">Buscar no dicionário</label>
-          <input id="busca" type="search" placeholder="Buscar no acervo" maxLength={160}
+          <input id="busca" type="search" placeholder="Palavra, assunto ou exemplo" maxLength={160}
             value={busca} onChange={(evento) => mudarBusca(evento.target.value)} />
-        </div>
+          <button type="submit" aria-label="Ver resultados"><ArrowRight size={22} aria-hidden="true" /></button>
+        </form>
       </div>
-      <div className="abertura-arte" aria-hidden="true"><Hand strokeWidth={1.1} size={125} /></div>
+      {destaque ? <figure className="destaque">
+        <div className="fotogramas" aria-hidden="true">
+          <Image className="quadro-principal" src="/acervo/wikipedia.jpg" alt="" width={480} height={480} unoptimized />
+          <Image className="quadro-secundario" src="/acervo/wikipedia-segundo-quadro.jpg" alt="" width={480} height={480} unoptimized />
+        </div>
+        <figcaption>
+          <span className="destaque-legenda"><small>Sinal em vídeo</small><strong>{destaque.palavra}</strong></span>
+          <button className="acao-destaque" type="button" onClick={() => abrir(destaque)}
+            aria-label={`Ver sinal de ${destaque.palavra}`}><Play size={22} fill="currentColor" aria-hidden="true" /></button>
+        </figcaption>
+      </figure> : <div className="capa-indice">
+        <a href="#indice">Consultar<br />o índice <ArrowDownRight size={34} aria-hidden="true" /></a>
+      </div>}
     </section>
-    <section className="catalogo" aria-labelledby="titulo-acervo">
+    <section id="indice" className="catalogo" aria-labelledby="titulo-acervo">
       <div className="cabecalho-acervo">
         <div>
-          <h2 id="titulo-acervo">Explore o acervo</h2>
-          <p aria-live="polite" className="suave">{situacao === 'carregando' ? 'Buscando verbetes…'
+          <h2 id="titulo-acervo" tabIndex={-1}>Índice de verbetes</h2>
+          <p aria-live="polite" className="contagem">{situacao === 'carregando' ? 'Buscando verbetes…'
             : situacao === 'pronto' ? `${verbetes.length} ${verbetes.length === 1 ? 'verbete' : 'verbetes'}` : ''}</p>
         </div>
-        <div className="filtros">
-          <label className="somente-leitor" htmlFor="assunto-busca">Filtrar por assunto</label>
-          <select id="assunto-busca" value={assunto} onChange={(evento) => mudarAssunto(evento.target.value)}>
-            <option value="">Todos os assuntos</option>
-            {assuntos.map((item) => <option key={item}>{item}</option>)}
-          </select>
-          <label className="somente-leitor" htmlFor="ordem-busca">Ordenar verbetes</label>
-          <select id="ordem-busca" value={ordem} onChange={(evento) => mudarOrdem(evento.target.value)}>
+        <label className="ordem-indice">Ordenar
+          <select value={ordem} onChange={(evento) => mudarOrdem(evento.target.value)}>
             <option value="az">A–Z</option><option value="za">Z–A</option>
           </select>
-        </div>
+        </label>
       </div>
       <div className="alfabeto" role="group" aria-label="Filtrar pela inicial">
         {['', ...alfabeto].map((item) => <button key={item} type="button" aria-pressed={letra === item}
           onClick={() => mudarLetra(item)}>{item || 'Todas'}</button>)}
       </div>
-      {situacao === 'erro' && <div className="vazio"><p role="alert">{erro}</p>
-        <button className="botao secundario" onClick={() => tentar((valor) => valor + 1)}>Tentar novamente</button></div>}
-      {situacao === 'pronto' && (verbetes.length ? <ul className="verbetes">
-        {verbetes.map((verbete) => <li key={verbete.id}>
-          <button type="button" className="cartao-verbete" onClick={() => abrir(verbete)}>
-            <span className="letra-verbete" aria-hidden="true">{verbete.palavra[0].toUpperCase()}</span>
-            <span className="texto-verbete"><strong>{verbete.palavra}</strong><span>{verbete.acepcao}</span>
-              <small>{verbete.assunto} · {verbete.sinais.length} {verbete.sinais.length === 1 ? 'sinal' : 'sinais'}</small></span>
-            <ArrowUpRight size={19} aria-hidden="true" />
-          </button>
-        </li>)}
-      </ul> : <div className="vazio">
-        <BookOpen size={28} aria-hidden="true" />
-        <h3>{filtrando ? 'Nenhum verbete encontrado' : 'O acervo está começando'}</h3>
-        <p>{filtrando ? 'Tente outro termo ou limpe os filtros.' : 'Os verbetes aparecem aqui depois da aprovação da moderação.'}</p>
-        {filtrando
-          ? <button className="botao secundario" onClick={() => { mudarBusca(''); mudarLetra(''); mudarAssunto(''); }}>Limpar filtros</button>
-          : <button className="botao secundario" onClick={contribuir}>Contribuir com um verbete <ArrowUpRight size={17} aria-hidden="true" /></button>}
-      </div>)}
+      <div className="grade-acervo">
+        <aside className="assuntos-indice" aria-labelledby="titulo-assuntos">
+          <h3 id="titulo-assuntos">Filtrar por assunto</h3>
+          <ul>
+            {['', ...assuntos].map((item) => <li key={item}>
+              <button type="button" aria-pressed={assunto === item} onClick={() => mudarAssunto(item)}>
+                {item || 'Todos os assuntos'}<ArrowUpRight size={14} aria-hidden="true" />
+              </button>
+            </li>)}
+          </ul>
+          {filtrando && <button className="botao texto limpar-indice" onClick={() => {
+            mudarBusca(''); mudarLetra(''); mudarAssunto('');
+          }}>Limpar filtros</button>}
+        </aside>
+        <div className="resultados">
+          {situacao === 'erro' && <div className="vazio"><p role="alert">{erro}</p>
+            <button className="botao secundario" onClick={() => tentar((valor) => valor + 1)}>Tentar novamente</button></div>}
+          {situacao === 'pronto' && (verbetes.length ? <ul className="verbetes">
+            {verbetes.map((verbete) => {
+              const amostra = verbete.sinais[0]?.amostra;
+              return <li key={verbete.id}>
+                <button type="button" className="ficha-verbete" onClick={() => abrir(verbete)}>
+                  <span className="letra-verbete" aria-hidden="true">{verbete.palavra[0].toUpperCase()}</span>
+                  <span className="texto-verbete"><strong>{verbete.palavra}</strong><span>{verbete.acepcao}</span></span>
+                  <span className="dados-ficha">
+                    <span>{verbete.assunto}</span>
+                    <span>{verbete.sinais.length} {verbete.sinais.length === 1 ? 'sinal' : 'sinais'}
+                      {amostra?.tipo === 'simulada' && ' · Simulado'}</span>
+                  </span>
+                  <ArrowUpRight size={23} aria-hidden="true" />
+                </button>
+              </li>;
+            })}
+          </ul> : <div className="vazio">
+            <h3>{filtrando ? 'Nenhum verbete encontrado' : 'O acervo está começando'}</h3>
+            <p>{filtrando ? 'Tente outro termo ou limpe os filtros.' : 'Os verbetes aparecem aqui depois da aprovação da moderação.'}</p>
+            {!filtrando && <button className="botao secundario" onClick={contribuir}>Contribuir com um verbete <ArrowUpRight size={17} aria-hidden="true" /></button>}
+          </div>)}
+        </div>
+      </div>
     </section>
   </>;
 }
@@ -107,7 +141,7 @@ export function Reprodutor({ sinal }: { sinal: DadosSinal }) {
   const [falhou, mudarFalhou] = useState(false);
   return <div className="midia">
     {sinal.videoId && <>
-      <video controls playsInline preload="metadata" src={urlMidia(sinal.videoId)} onRateChange={(evento) => {
+      <video controls playsInline preload="metadata" poster={sinal.amostra?.cartaz} src={urlMidia(sinal.videoId)} onRateChange={(evento) => {
         mudarVelocidade(String(evento.currentTarget.playbackRate));
       }} onError={() => mudarFalhou(true)}
         ref={(video) => { if (video) video.playbackRate = Number(velocidade); }}
@@ -116,6 +150,11 @@ export function Reprodutor({ sinal }: { sinal: DadosSinal }) {
         Seu navegador não reproduz este vídeo.
       </video>
       {falhou && <p role="alert">Não foi possível reproduzir o vídeo. <a href={urlMidia(sinal.videoId)}>Abrir o arquivo de vídeo</a></p>}
+      {sinal.amostra?.tipo === 'simulada' && <p className="credito-midia">Vídeo simulado para demonstrar o player.</p>}
+      {sinal.amostra?.tipo === 'referencia' && <p className="credito-midia">
+        <a href={sinal.amostra.credito.url}>{sinal.amostra.credito.titulo}</a>, de {sinal.amostra.credito.autor}.{' '}
+        <a href={sinal.amostra.credito.urlLicenca}>{sinal.amostra.credito.licenca}</a>.
+      </p>}
       <label className="velocidade">Velocidade
         <select value={velocidade} onChange={(evento) => mudarVelocidade(evento.target.value)}>
           {Array.from(new Set(['0.5', '0.75', '1', '1.25', '1.5', '2', velocidade]))
@@ -141,7 +180,7 @@ export function DetalheVerbete({ verbete, voltar, variar, solicitar }: {
 }) {
   const [selecionado, selecionar] = useState(verbete.sinais[0].id);
   const sinal = verbete.sinais.find((item) => item.id === selecionado) ?? verbete.sinais[0];
-  return <article className="pagina-interna">
+  return <article className="pagina-interna pagina-verbete">
     <button type="button" className="botao texto" onClick={voltar}><ArrowLeft size={18} aria-hidden="true" /> Voltar ao acervo</button>
     <div className="titulo-pagina">
       <p className="sobretitulo">{verbete.assunto}</p>
@@ -149,7 +188,7 @@ export function DetalheVerbete({ verbete, voltar, variar, solicitar }: {
       <p>{verbete.acepcao}</p>
     </div>
     <div className="detalhe-colunas">
-      <section className="painel">
+      <section className="painel painel-sinais">
         <h2>Sinais deste verbete</h2>
         <label>Sinal
           <select value={sinal.id} onChange={(evento) => selecionar(evento.target.value)}>
@@ -164,7 +203,7 @@ export function DetalheVerbete({ verbete, voltar, variar, solicitar }: {
           <button className="botao texto" onClick={() => solicitar(sinal.id)}>Solicitação de titular</button>
         </div>
       </section>
-      <section className="painel">
+      <section className="painel ficha-definicao">
         <h2>Sobre a palavra</h2>
         {verbete.imagemId && <Image className="imagem-verbete" src={urlMidia(verbete.imagemId)}
           alt={verbete.textoAlternativo} width={480} height={320} unoptimized />}

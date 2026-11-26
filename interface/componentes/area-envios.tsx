@@ -75,64 +75,80 @@ export function AreaEnvios({ usuario, novo, editar }: {
       </div>
       {!moderador && <button className="botao principal" onClick={novo}><Plus size={18} aria-hidden="true" /> Novo verbete</button>}
     </div>
-    {moderador && <div className="painel filtros filtros-revisao">
-      <label>Estado
-        <select value={estado} onChange={(evento) => mudarEstado(evento.target.value)}>
-          <option value="">Todos</option>
-          {estadosRevisao.map((item) => <option key={item} value={item}>{estados[item]}</option>)}
-        </select>
-      </label>
-      <label>De<input type="date" value={desde} onChange={(evento) => mudarDesde(evento.target.value)} /></label>
-      <label>Até<input type="date" value={ate} min={desde || undefined} onChange={(evento) => mudarAte(evento.target.value)} /></label>
-    </div>}
-    {erro && <div className="aviso erro" role="alert">{erro}{' '}
-      <button className="botao texto" onClick={() => { mudarErro(''); recarregar((atual) => atual + 1); }}>Atualizar lista</button></div>}
-    {sucesso && <p className="aviso" role="status">{sucesso}</p>}
-    {carregando ? <p role="status">Carregando envios…</p> : !envios.length
-      ? <p className="vazio">{moderador ? 'Nenhum envio neste filtro.' : 'Você ainda não tem envios.'}</p>
-      : <ul className="lista-paineis">{envios.map((envio) => {
-        const aberto = abertos.includes(envio.id);
-        const editavel = !moderador && ['rascunho', 'devolvido'].includes(envio.estado);
-        return <li className="painel" key={envio.id}>
-          <div className="linha-painel">
-            <div><h2>{envio.verbete.palavra || 'Verbete sem título'}</h2>
-              <p className="suave">{operacoes[envio.operacao]} · {tiposSinal[envio.sinal.tipo]} · {dataCurta(envio.atualizadoEm)}</p></div>
-            <span className={`estado estado-${envio.estado}`}>{estados[envio.estado]}</span>
-          </div>
-          {envio.revisoes.at(-1)?.justificativa && <p><strong>Última decisão:</strong> {envio.revisoes.at(-1)?.justificativa}</p>}
-          <div className="acoes">
-            <button className="botao secundario" aria-expanded={aberto} onClick={() =>
-              mudarAbertos((lista) => aberto ? lista.filter((id) => id !== envio.id) : [...lista, envio.id])}>
-              {aberto ? 'Ocultar detalhes' : 'Ver detalhes'}
-            </button>
-            {editavel && <>
-              <button className="botao secundario" onClick={() => editar(envio)}>Editar envio</button>
-              {confirmar === envio.id ? <>
-                <button className="botao perigo" disabled={ocupado} onClick={() => void executar(
-                  () => api(`envios/${envio.id}`, 'DELETE'), 'Envio excluído.',
-                )}>Confirmar exclusão</button>
-                <button className="botao texto" onClick={() => mudarConfirmar('')}>Cancelar</button>
-              </> : <button className="botao texto" onClick={() => mudarConfirmar(envio.id)}>Excluir envio</button>}
-            </>}
-          </div>
-          {aberto && <div className="detalhe-envio"><DetalheEnvio envio={envio} />
-            {moderador && envio.estado === 'em-revisao' && <Decidir ocupado={ocupado} onDecidir={(decisao, justificativa) => {
-              void executar(() => api(`envios/${envio.id}/revisoes`, 'POST', { decisao, justificativa }), 'Decisão registrada.');
-            }} />}
-          </div>}
-        </li>;
-      })}</ul>}
-    {!moderador && publicacoes.length > 0 && <section className="secao">
-      <h2>Meus sinais publicados</h2>
-      <ul className="lista-paineis">{publicacoes.map((envio) => <li className="painel linha-painel" key={envio.id}>
-        <div><h3>{envio.verbete.palavra}</h3><p className="suave">{tiposSinal[envio.sinal.tipo]} · {envio.sinal.glosa}</p></div>
-        <div className="acoes">{(['alteracao', 'remocao'] as const).map((operacao) => <button key={operacao} className="botao secundario"
-          disabled={ocupado} onClick={() => void executar(async () => {
-            const criado = await api<RegistroEnvio>('envios/propostas', 'POST', { sinalId: envio.sinalId, operacao });
-            editar(criado);
-          })}>{operacao === 'alteracao' ? 'Propor alteração' : 'Solicitar remoção'}</button>)}</div>
-      </li>)}</ul>
-    </section>}
+    <div className="grade-painel">
+      <aside className="lateral-painel">
+        {moderador ? <div className="filtros filtros-revisao">
+          <h2>Filtrar fila</h2>
+          <label>Estado
+            <select value={estado} onChange={(evento) => mudarEstado(evento.target.value)}>
+              <option value="">Todos</option>
+              {estadosRevisao.map((item) => <option key={item} value={item}>{estados[item]}</option>)}
+            </select>
+          </label>
+          <label>De<input type="date" value={desde} onChange={(evento) => mudarDesde(evento.target.value)} /></label>
+          <label>Até<input type="date" value={ate} min={desde || undefined} onChange={(evento) => mudarAte(evento.target.value)} /></label>
+        </div> : <>
+          <h2>Meu acervo</h2>
+          <dl>
+            <div><dt>Envios</dt><dd>{envios.length}</dd></div>
+            <div><dt>Sinais publicados</dt><dd>{publicacoes.length}</dd></div>
+          </dl>
+        </>}
+      </aside>
+      <div className="miolo-painel">
+        {erro && <div className="aviso erro" role="alert">{erro}{' '}
+          <button className="botao texto" onClick={() => { mudarErro(''); recarregar((atual) => atual + 1); }}>Atualizar lista</button></div>}
+        {sucesso && <p className="aviso" role="status">{sucesso}</p>}
+        {carregando ? <p role="status">Carregando envios…</p> : !envios.length
+          ? <p className="vazio">{moderador ? 'Nenhum envio neste filtro.' : 'Você ainda não tem envios.'}</p>
+          : <ul className="lista-paineis">{envios.map((envio) => {
+            const aberto = abertos.includes(envio.id);
+            const editavel = !moderador && ['rascunho', 'devolvido'].includes(envio.estado);
+            return <li className="painel" key={envio.id}>
+              <div className="linha-painel">
+                <div><h2>{envio.verbete.palavra || 'Verbete sem título'}</h2>
+                  <p className="suave">{operacoes[envio.operacao]} · {tiposSinal[envio.sinal.tipo]} · {dataCurta(envio.atualizadoEm)}</p></div>
+                <div className="metadados-envio">
+                  <span className={`estado estado-${envio.estado}`}>{estados[envio.estado]}</span>
+                  {envio.demonstracao && <small>Envio de demonstração</small>}
+                </div>
+              </div>
+              {envio.revisoes.at(-1)?.justificativa && <p><strong>Última decisão:</strong> {envio.revisoes.at(-1)?.justificativa}</p>}
+              <div className="acoes">
+                <button className="botao secundario" aria-expanded={aberto} onClick={() =>
+                  mudarAbertos((lista) => aberto ? lista.filter((id) => id !== envio.id) : [...lista, envio.id])}>
+                  {aberto ? 'Ocultar detalhes' : 'Ver detalhes'}
+                </button>
+                {editavel && <>
+                  <button className="botao secundario" onClick={() => editar(envio)}>Editar envio</button>
+                  {confirmar === envio.id ? <>
+                    <button className="botao perigo" disabled={ocupado} onClick={() => void executar(
+                      () => api(`envios/${envio.id}`, 'DELETE'), 'Envio excluído.',
+                    )}>Confirmar exclusão</button>
+                    <button className="botao texto" onClick={() => mudarConfirmar('')}>Cancelar</button>
+                  </> : <button className="botao texto" onClick={() => mudarConfirmar(envio.id)}>Excluir envio</button>}
+                </>}
+              </div>
+              {aberto && <div className="detalhe-envio"><DetalheEnvio envio={envio} />
+                {moderador && envio.estado === 'em-revisao' && <Decidir ocupado={ocupado} onDecidir={(decisao, justificativa) => {
+                  void executar(() => api(`envios/${envio.id}/revisoes`, 'POST', { decisao, justificativa }), 'Decisão registrada.');
+                }} />}
+              </div>}
+            </li>;
+          })}</ul>}
+        {!moderador && publicacoes.length > 0 && <section className="secao">
+          <h2>Meus sinais publicados</h2>
+          <ul className="lista-paineis">{publicacoes.map((envio) => <li className="painel linha-painel" key={envio.id}>
+            <div><h3>{envio.verbete.palavra}</h3><p className="suave">{tiposSinal[envio.sinal.tipo]} · {envio.sinal.glosa}</p></div>
+            <div className="acoes">{(['alteracao', 'remocao'] as const).map((operacao) => <button key={operacao} className="botao secundario"
+              disabled={ocupado} onClick={() => void executar(async () => {
+                const criado = await api<RegistroEnvio>('envios/propostas', 'POST', { sinalId: envio.sinalId, operacao });
+                editar(criado);
+              })}>{operacao === 'alteracao' ? 'Propor alteração' : 'Solicitar remoção'}</button>)}</div>
+          </li>)}</ul>
+        </section>}
+      </div>
+    </div>
   </section>;
 }
 

@@ -3,6 +3,7 @@ import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from '
 import { join } from 'node:path';
 import { Acervo, RepositorioAcervo } from '../acervo/aplicacao/repositorio-acervo';
 import type { Perfil } from '../usuarios/dominio/usuario';
+import { carregarMostruario } from './carregar-mostruario';
 import { pastaDados } from './pastas';
 import { protegerSenha } from './segredo';
 
@@ -23,6 +24,12 @@ export class RepositorioArquivo extends RepositorioAcervo {
         })),
         assuntos: ['Cotidiano', 'Cultura', 'Educação', 'Saudações', 'Trabalho'],
         envios: [], publicados: {}, midias: [], solicitacoes: [], auditoria: [],
+      });
+    }
+    if (process.env.MOSTRUARIO !== '0' && (this.consultar().versaoMostruario ?? 0) < 1) {
+      this.alterar((acervo) => {
+        carregarMostruario(acervo);
+        acervo.versaoMostruario = 1;
       });
     }
   }

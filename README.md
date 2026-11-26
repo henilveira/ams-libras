@@ -29,7 +29,18 @@ A tela **Entrar** preenche as credenciais ao escolher um perfil de demonstraçã
 | Moderador | `moderador@libras.local` | Revisa envios, confere documentos e registra decisões |
 | Administrador | `administrador@libras.local` | Cria contas e assuntos, altera perfis, atende solicitações e consulta a auditoria |
 
-## Roteiro da apresentação
+## Acervo de demonstração
+
+O acervo carrega uma vez na inicialização. Ele inclui 10 verbetes publicados, variações fictícias em **Biblioteca** e **Bom dia**, um rascunho, uma devolução, um envio rejeitado, dois em revisão e uma solicitação de titular. A carga mantém os cadastros existentes e pula palavras já registradas.
+
+- Abra **Wikipédia** no destaque para reproduzir um vídeo real. A mídia e os dois fotogramas são de Victor de Andrade Lopes, via [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Sinais_da_Wikip%C3%A9dia_em_Libras.webm), sob [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/). O vídeo foi convertido para MP4. Os fotogramas foram extraídos para a capa.
+- Abra **Biblioteca** para mostrar o seletor de variações. As variações e a mídia gráfica dos verbetes marcados como **Simulado** servem para demonstrar os fluxos do app.
+- Entre como moderador para aprovar **Museu** ou devolver **Bilhete** com uma justificativa. Depois, alterne para colaborador para mostrar o resultado.
+- Entre como administrador para abrir **Solicitações** e mostrar o pedido de exemplo e a auditoria.
+
+Para testar com acervo vazio, inicie com `MOSTRUARIO=0` e um `PASTA_DADOS` novo. As fontes Barlow Condensed e DM Sans são servidas localmente pelo [Fontsource](https://fontsource.org/). O layout parte de referências de tipografia e listas do [21st.dev](https://dev.21st.dev/community/components/s/typography) e do índice do [Neutra VDL](https://neutra-vdl.org/).
+
+## Roteiro para cadastrar um novo sinal
 
 1. Entre como colaborador e crie um verbete. Preencha palavra, assunto, acepção, glosa e descrição do movimento. Salve um rascunho para demonstrar a edição.
 2. Anexe um vídeo MP4/H.264 ou WebM de até 60 segundos e 50 MiB. Informe a base de uso, a finalidade e a presença de pessoas identificáveis ou menores. Se houver pessoas identificáveis, anexe o comprovante em PDF. Imagens PNG, JPEG ou WebP e comprovantes PDF aceitam até 5 MiB. O vídeo com fala pode receber uma legenda `.vtt`.
@@ -38,7 +49,7 @@ A tela **Entrar** preenche as credenciais ao escolher um perfil de demonstraçã
 5. Entre novamente como colaborador e use **Propor variação** no verbete publicado. Em **Meus sinais publicados**, o autor também pode propor alterações ou remoções. A versão anterior segue disponível até a aprovação da proposta. Para retirar um sinal de referência pela moderação, retire primeiro as variações publicadas.
 6. Para demonstrar o atendimento, registre uma **Solicitação de titular** na página de um sinal. Entre como administrador e registre a resposta e a verificação de identidade. A retirada administrativa de um sinal de referência retira o verbete inteiro da consulta.
 
-O acervo inicial é vazio. Use um vídeo próprio autorizado para demonstrar um sinal real. Os arquivos e os cadastros usados na validação foram sintéticos.
+Para demonstrar um novo sinal real, use um vídeo próprio autorizado.
 
 ## Arquitetura
 

@@ -1,5 +1,5 @@
 import type { Conta } from '../../usuarios/dominio/usuario';
-import type { RegistroEnvio, TipoMidia } from '../dominio/verbete';
+import type { AmostraMidia, RegistroEnvio, TipoMidia } from '../dominio/verbete';
 
 export interface Midia {
   id: string;
@@ -8,6 +8,7 @@ export interface Midia {
   nome: string;
   extensao: string;
   formato: string;
+  amostra?: AmostraMidia;
 }
 
 export interface SolicitacaoTitular {
@@ -36,6 +37,7 @@ export interface Acervo {
   midias: Midia[];
   solicitacoes: SolicitacaoTitular[];
   auditoria: Evento[];
+  versaoMostruario?: number;
 }
 
 export abstract class RepositorioAcervo {

@@ -38,7 +38,7 @@ export class ServicoAcervo {
       }
     }
     for (const envio of sinais) {
-      grupos.get(envio.verbeteId)?.sinais.push({ ...envio.sinal, id: envio.sinalId });
+      grupos.get(envio.verbeteId)?.sinais.push({ ...this.comAmostra(acervo, envio).sinal, id: envio.sinalId });
     }
     const busca = normalizar(termo);
     return [...grupos.values()].filter((verbete) =>
@@ -71,12 +71,14 @@ export class ServicoAcervo {
   }
 
   envios(ator: Usuario, estado?: EstadoEnvio, desde?: string, ate?: string) {
-    return this.repositorio.consultar().envios.filter((envio) => {
+    const acervo = this.repositorio.consultar();
+    return acervo.envios.filter((envio) => {
       const visivel = ator.perfil === 'colaborador' ? envio.autorId === ator.id : envio.estado !== 'rascunho';
       const data = envio.atualizadoEm.slice(0, 10);
       return visivel && envio.estado !== 'excluido'
         && (!estado || envio.estado === estado) && (!desde || data >= desde) && (!ate || data <= ate);
-    }).sort((a, b) => b.atualizadoEm.localeCompare(a.atualizadoEm));
+    }).sort((a, b) => b.atualizadoEm.localeCompare(a.atualizadoEm))
+      .map((envio) => this.comAmostra(acervo, envio));
   }
 
   gerenciarPublicados(ator: Usuario) {
@@ -106,7 +108,7 @@ export class ServicoAcervo {
         throw new ErroDeDominio('Já existe uma solicitação em aberto para este sinal.');
       }
       const conteudo: ConteudoEnvio = { verbete: atual.verbete, sinal: atual.sinal, autorizacao: atual.autorizacao };
-      return this.novoEnvio(acervo, ator.id, conteudo, atual.verbeteId, sinalId, operacao);
+      return this.comAmostra(acervo, this.novoEnvio(acervo, ator.id, conteudo, atual.verbeteId, sinalId, operacao));
     });
   }
 
@@ -132,7 +134,7 @@ export class ServicoAcervo {
       envio.atualizar(conteudo, ator.id, agora);
       if (encaminhar) {
         this.validarDependencias(acervo, envio.registro);
-        envio.solicitarRevisao(ator.id, agora);
+        envio.solicitarRevisao(ator.id, agora, this.comAmostra(acervo, envio.registro).sinal.amostra?.tipo === 'referencia');
       }
       registrar(acervo, ator.id, id, encaminhar ? 'Enviado para revisão' : 'Envio atualizado');
       return envio.registro;
@@ -151,7 +153,8 @@ export class ServicoAcervo {
       const registro = acervo.envios.find((item) => item.id === id);
       if (!registro) throw new NotFoundException('Envio não encontrado.');
       const envio = new Envio(registro);
-      envio.revisar(decisao, justificativa, ator.id, new Date().toISOString());
+      envio.revisar(decisao, justificativa, ator.id, new Date().toISOString(),
+        this.comAmostra(acervo, registro).sinal.amostra?.tipo === 'referencia');
       if (decisao === 'aprovado') {
         this.validarDependencias(acervo, registro);
         if (registro.operacao === 'remocao') delete acervo.publicados[registro.sinalId];
@@ -160,6 +163,11 @@ export class ServicoAcervo {
       registrar(acervo, ator.id, id, `Revisão: ${decisao}`);
       return registro;
     });
+  }
+
+  private comAmostra(acervo: Acervo, envio: RegistroEnvio): RegistroEnvio {
+    const amostra = acervo.midias.find((item) => item.id === envio.sinal.videoId)?.amostra;
+    return { ...envio, sinal: { ...envio.sinal, amostra } };
   }
 
   private novoEnvio(acervo: Acervo, autorId: string, conteudo: ConteudoEnvio, verbeteId: string,
