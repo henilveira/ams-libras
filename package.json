@@ -1,0 +1,12 @@
+{
+  "name": "ams-libras",
+  "private": true,
+  "workspaces": ["servidor", "interface"],
+  "engines": { "node": ">=22.12" },
+  "scripts": {
+    "dev": "concurrently --kill-others --names api,web \"npm run dev -w servidor\" \"npm run dev -w interface\"",
+    "build": "npm run build -w servidor && npm run build -w interface",
+    "start": "concurrently --kill-others --names api,web \"npm start -w servidor\" \"npm start -w interface\""
+  },
+  "devDependencies": { "concurrently": "^9.2.1" }
+}

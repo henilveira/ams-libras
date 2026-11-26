@@ -1,0 +1,24 @@
+{
+  "name": "servidor",
+  "private": true,
+  "scripts": {
+    "dev": "node --watch --require ts-node/register fonte/inicio.ts",
+    "build": "tsc",
+    "start": "node compilado/inicio.js"
+  },
+  "dependencies": {
+    "@nestjs/common": "^11",
+    "@nestjs/core": "^11",
+    "@nestjs/platform-express": "^11",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.2",
+    "zod": "^4"
+  },
+  "devDependencies": {
+    "@types/express": "^5",
+    "@types/multer": "^2",
+    "@types/node": "^24",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9"
+  }
+}
