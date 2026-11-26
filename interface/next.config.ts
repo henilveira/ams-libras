@@ -2,6 +2,7 @@ import type { NextConfig } from 'next';
 
 const configuracao: NextConfig = {
   devIndicators: false,
+  agentRules: false,
   experimental: { proxyClientMaxBodySize: '55mb' },
   async rewrites() {
     return [{
